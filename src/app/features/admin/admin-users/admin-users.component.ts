@@ -37,14 +37,25 @@ export class AdminUsersComponent implements OnInit {
     this.loadUsers();
   }
 
+  /**
+   * Charge la liste de tous les utilisateurs depuis l'API
+   */
   loadUsers(): void {
     this.userService.getAllUsers().subscribe((users) => this.users.set(users));
   }
 
+  /**
+   * Compte le nombre d'utilisateurs par rôle
+   * @param role - Rôle à compter (admin ou user)
+   * @returns Nombre d'utilisateurs avec ce rôle
+   */
   countByRole(role: string): number {
     return this.users().filter((u) => u.role === role).length;
   }
 
+  /**
+   * Soumet le formulaire pour créer ou modifier un utilisateur
+   */
   onSubmit(): void {
     if (this.userForm.valid) {
       this.loading = true;
@@ -72,6 +83,10 @@ export class AdminUsersComponent implements OnInit {
     }
   }
 
+  /**
+   * Charge les données d'un utilisateur dans le formulaire pour édition
+   * @param user - Utilisateur à modifier
+   */
   editUser(user: User): void {
     this.editMode = true;
     this.currentUserId = user.id;
@@ -86,6 +101,10 @@ export class AdminUsersComponent implements OnInit {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  /**
+   * Affiche les statistiques d'un utilisateur dans une alerte
+   * @param user - Utilisateur dont on veut voir les stats
+   */
   viewStats(user: User): void {
     this.userService.getUserProfile(user.id).subscribe((profile) => {
       alert(
@@ -94,6 +113,10 @@ export class AdminUsersComponent implements OnInit {
     });
   }
 
+  /**
+   * Crédite le solde d'un utilisateur après saisie du montant
+   * @param user - Utilisateur à créditer
+   */
   creditBalance(user: User): void {
     const amount = prompt(
       `Créditer le compte de ${user.username}:\n\nMontant à ajouter:`
@@ -111,6 +134,10 @@ export class AdminUsersComponent implements OnInit {
     }
   }
 
+  /**
+   * Supprime un utilisateur après confirmation
+   * @param user - Utilisateur à supprimer
+   */
   deleteUser(user: User): void {
     if (
       confirm(
@@ -126,10 +153,17 @@ export class AdminUsersComponent implements OnInit {
     }
   }
 
+  /**
+   * Annule l'édition en cours et réinitialise le formulaire
+   */
   cancelEdit(): void {
     this.resetForm();
   }
 
+  /**
+   * Réinitialise le formulaire avec les valeurs par défaut
+   * Réactive la validation du mot de passe et désactive le mode édition
+   */
   resetForm(): void {
     this.userForm.reset({ role: 'user', balance: 0 });
     this.userForm.get('password')?.setValidators(Validators.required);

@@ -27,11 +27,12 @@ export class AdminDashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    console.log('📊 Admin Dashboard initialized');
-    console.log('🔍 Checking routerLink="/admin/bets"');
     this.loadStats();
   }
 
+  /**
+   * Charge les statistiques du dashboard (nombres d'utilisateurs, matchs, paris, équipes)
+   */
   loadStats(): void {
     this.userService
       .getAllUsers()
@@ -55,7 +56,6 @@ export class AdminDashboardComponent implements OnInit {
         .getAll()
         .subscribe((bets: any[]) => this.totalBets.set(bets.length));
     } else {
-      // No compatible method found on BetService; default to 0
       this.totalBets.set(0);
     }
 

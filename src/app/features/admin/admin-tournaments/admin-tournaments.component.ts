@@ -41,47 +41,42 @@ export class AdminTournamentsComponent implements OnInit {
     this.loadTournaments();
   }
 
+  /**
+   * Charge la liste de tous les tournois depuis l'API
+   */
   loadTournaments(): void {
-    console.log('📡 Loading tournaments...');
     this.tournamentService.getAllTournaments().subscribe({
       next: (tournaments) => {
-        console.log('✅ Tournaments loaded:', tournaments);
         this.tournaments.set(tournaments);
       },
       error: (error) => {
-        console.error('❌ Error loading tournaments:', error);
         alert('Erreur lors du chargement des tournois');
       },
     });
   }
 
+  /**
+   * Remplace l'image par un placeholder en cas d'erreur de chargement
+   * @param event - Événement d'erreur de chargement d'image
+   */
   onImageError(event: Event): void {
     (event.target as HTMLImageElement).src =
       'https://via.placeholder.com/150/667eea/FFFFFF?text=Tournament';
   }
 
+  /**
+   * Soumet le formulaire pour créer ou modifier un tournoi
+   */
   onSubmit(): void {
     if (this.tournamentForm.valid) {
       this.loading = true;
-      console.log('='.repeat(50));
-      console.log('📝 TOURNAMENT FORM SUBMISSION');
-      console.log('='.repeat(50));
-      console.log('Raw form values:', this.tournamentForm.value);
-      console.log('Edit mode:', this.editMode);
 
-      // S'assurer que prize_pool est un nombre
       const prizePool = Number(this.tournamentForm.value.prize_pool);
-      console.log('Prize pool conversion:', {
-        original: this.tournamentForm.value.prize_pool,
-        type: typeof this.tournamentForm.value.prize_pool,
-        converted: prizePool,
-        typeAfter: typeof prizePool,
-      });
 
       const data = {
         name: this.tournamentForm.value.name,
         game: this.tournamentForm.value.game,
-        prize_pool: prizePool, // Nombre, pas string
+        prize_pool: prizePool,
         logo_url:
           this.tournamentForm.value.logo_url ||
           'https://via.placeholder.com/150/667eea/FFFFFF?text=Tournament',
@@ -89,36 +84,16 @@ export class AdminTournamentsComponent implements OnInit {
         end_date: this.tournamentForm.value.end_date,
       };
 
-      console.log('📤 Final data to send:');
-      console.log(JSON.stringify(data, null, 2));
-      console.log('Data types:', {
-        name: typeof data.name,
-        game: typeof data.game,
-        prize_pool: typeof data.prize_pool,
-        logo_url: typeof data.logo_url,
-        start_date: typeof data.start_date,
-        end_date: typeof data.end_date,
-      });
-      console.log('🔐 Token exists:', !!localStorage.getItem('access_token'));
-      console.log('🌐 API endpoint:', 'http://localhost:3000/tournaments');
-
       if (this.editMode && this.currentTournamentId) {
-        console.log('🔄 UPDATE MODE - ID:', this.currentTournamentId);
-
         this.tournamentService
           .updateTournament(this.currentTournamentId, data)
           .subscribe({
             next: (response) => {
-              console.log('✅ UPDATE SUCCESS:', response);
               alert('✅ Tournoi modifié !');
               this.loadTournaments();
               this.resetForm();
             },
             error: (error) => {
-              console.error('❌ UPDATE ERROR:', error);
-              console.error('Status:', error.status);
-              console.error('Message:', error.message);
-              console.error('Body:', error.error);
               alert(
                 `Erreur: ${
                   error.error?.message || 'Impossible de modifier le tournoi'
@@ -129,23 +104,13 @@ export class AdminTournamentsComponent implements OnInit {
             complete: () => (this.loading = false),
           });
       } else {
-        console.log('➕ CREATE MODE');
-
         this.tournamentService.createTournament(data).subscribe({
           next: (response) => {
-            console.log('✅ CREATE SUCCESS:', response);
             alert('✅ Tournoi créé avec succès !');
             this.loadTournaments();
             this.resetForm();
           },
           error: (error) => {
-            console.error('❌ CREATE ERROR');
-            console.error('Status:', error.status);
-            console.error('Status text:', error.statusText);
-            console.error('Message:', error.message);
-            console.error('Error body:', error.error);
-            console.error('Full error:', JSON.stringify(error, null, 2));
-
             let errorMsg = 'Impossible de créer le tournoi';
 
             if (error.status === 0) {
@@ -174,20 +139,15 @@ export class AdminTournamentsComponent implements OnInit {
         });
       }
     } else {
-      console.log('❌ FORM INVALID');
-      console.log('Form errors:');
-      Object.keys(this.tournamentForm.controls).forEach((key) => {
-        const control = this.tournamentForm.get(key);
-        if (control?.invalid) {
-          console.log(`  ❌ ${key}:`, control.errors);
-        }
-      });
       alert('Veuillez remplir tous les champs obligatoires');
     }
   }
 
+  /**
+   * Charge les données d'un tournoi dans le formulaire pour édition
+   * @param tournament - Tournoi à modifier
+   */
   editTournament(tournament: Tournament): void {
-    console.log('✏️ Editing tournament:', tournament);
     this.editMode = true;
     this.currentTournamentId = tournament.id;
     this.tournamentForm.patchValue({
@@ -201,20 +161,22 @@ export class AdminTournamentsComponent implements OnInit {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  /**
+   * Supprime un tournoi après confirmation
+   * @param tournament - Tournoi à supprimer
+   */
   deleteTournament(tournament: Tournament): void {
     if (
       confirm(
         `⚠️ Supprimer ${tournament.name} ?\n\nCette action est irréversible !`
       )
     ) {
-      console.log('🗑️ Deleting tournament:', tournament.id);
       this.tournamentService.deleteTournament(tournament.id).subscribe({
         next: () => {
           alert('✅ Tournoi supprimé !');
           this.loadTournaments();
         },
         error: (error) => {
-          console.error('❌ Error deleting:', error);
           if (error.status === 409) {
             alert(
               '❌ Impossible de supprimer ce tournoi car des matchs y sont associés.'
@@ -231,10 +193,16 @@ export class AdminTournamentsComponent implements OnInit {
     }
   }
 
+  /**
+   * Annule l'édition en cours et réinitialise le formulaire
+   */
   cancelEdit(): void {
     this.resetForm();
   }
 
+  /**
+   * Réinitialise le formulaire avec les valeurs par défaut
+   */
   resetForm(): void {
     this.tournamentForm.reset({ prize_pool: 0 });
     this.editMode = false;

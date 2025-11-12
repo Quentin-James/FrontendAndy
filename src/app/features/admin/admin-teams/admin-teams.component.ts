@@ -36,10 +36,17 @@ export class AdminTeamsComponent implements OnInit {
     this.loadTeams();
   }
 
+  /**
+   * Charge la liste de toutes les équipes depuis l'API
+   */
   loadTeams(): void {
     this.teamService.getAllTeams().subscribe((teams) => this.teams.set(teams));
   }
 
+  /**
+   * Gère la sélection d'un fichier logo et génère un aperçu
+   * @param event - Événement de sélection de fichier
+   */
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
@@ -53,15 +60,12 @@ export class AdminTeamsComponent implements OnInit {
     }
   }
 
+  /**
+   * Soumet le formulaire pour créer ou modifier une équipe
+   */
   onSubmit(): void {
     if (this.teamForm.valid) {
       this.loading = true;
-      console.log('='.repeat(50));
-      console.log('📝 FORM SUBMISSION');
-      console.log('='.repeat(50));
-      console.log('Form values:', this.teamForm.value);
-      console.log('Edit mode:', this.editMode);
-      console.log('Current team ID:', this.currentTeamId);
 
       const data = {
         name: this.teamForm.value.name,
@@ -70,32 +74,19 @@ export class AdminTeamsComponent implements OnInit {
           this.teamForm.value.logo_url || 'https://via.placeholder.com/150',
       };
 
-      console.log('📤 Data to send:', JSON.stringify(data, null, 2));
-      console.log('🔐 Token exists:', !!localStorage.getItem('access_token'));
-      console.log('🌐 API will call:', 'http://localhost:3000/teams');
-
       if (this.editMode && this.currentTeamId) {
-        console.log('🔄 UPDATE MODE');
-
         this.teamService.updateTeam(this.currentTeamId, data).subscribe({
           next: (response) => {
-            console.log('✅ UPDATE SUCCESS:', response);
-            alert('✅ Équipe modifiée !');
+            alert('Équipe modifiée !');
             this.loadTeams();
             this.resetForm();
           },
           error: (error) => {
-            console.error('❌ UPDATE ERROR');
-            console.error('Full error object:', error);
-            console.error('Error status:', error.status);
-            console.error('Error message:', error.message);
-            console.error('Error body:', error.error);
-
             let errorMsg = "Impossible de modifier l'équipe";
             if (error.status === 0) {
-              errorMsg = '❌ Erreur de connexion. Backend non accessible.';
+              errorMsg = 'Erreur de connexion. Backend non accessible.';
             } else if (error.status === 401) {
-              errorMsg = '❌ Non authentifié. Reconnectez-vous.';
+              errorMsg = 'Non authentifié. Reconnectez-vous.';
             } else if (error.error?.message) {
               errorMsg = error.error.message;
             }
@@ -106,33 +97,23 @@ export class AdminTeamsComponent implements OnInit {
           complete: () => (this.loading = false),
         });
       } else {
-        console.log('➕ CREATE MODE');
-
         this.teamService.createTeamSimple(data).subscribe({
           next: (response) => {
-            console.log('✅ CREATE SUCCESS:', response);
-            alert('✅ Équipe créée avec succès !');
+            alert('Équipe créée avec succès !');
             this.loadTeams();
             this.resetForm();
           },
           error: (error) => {
-            console.error('❌ CREATE ERROR');
-            console.error('Full error object:', error);
-            console.error('Error status:', error.status);
-            console.error('Error message:', error.message);
-            console.error('Error body:', error.error);
-            console.error('Error headers:', error.headers);
-
             let errorMsg = "Impossible de créer l'équipe";
             if (error.status === 0) {
               errorMsg =
-                '❌ Erreur de connexion. Vérifiez que le backend est démarré sur http://localhost:3000';
+                'Erreur de connexion. Vérifiez que le backend est démarré sur http://localhost:3000';
             } else if (error.status === 401) {
               errorMsg =
-                '❌ Non authentifié. Token invalide ou expiré. Reconnectez-vous.';
+                'Non authentifié. Token invalide ou expiré. Reconnectez-vous.';
             } else if (error.status === 403) {
               errorMsg =
-                "❌ Accès refusé. Vous n'avez pas les droits administrateur.";
+                "Accès refusé. Vous n'avez pas les droits administrateur.";
             } else if (error.error?.message) {
               errorMsg = error.error.message;
             }
@@ -144,17 +125,14 @@ export class AdminTeamsComponent implements OnInit {
         });
       }
     } else {
-      console.log('❌ FORM INVALID');
-      Object.keys(this.teamForm.controls).forEach((key) => {
-        const control = this.teamForm.get(key);
-        if (control?.invalid) {
-          console.log(`❌ Invalid field: ${key}`, control.errors);
-        }
-      });
       alert('Veuillez remplir tous les champs obligatoires (nom et région)');
     }
   }
 
+  /**
+   * Charge les données d'une équipe dans le formulaire pour édition
+   * @param team - Équipe à modifier
+   */
   editTeam(team: Team): void {
     this.editMode = true;
     this.currentTeamId = team.id;
@@ -166,6 +144,10 @@ export class AdminTeamsComponent implements OnInit {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  /**
+   * Supprime une équipe après confirmation
+   * @param team - Équipe à supprimer
+   */
   deleteTeam(team: Team): void {
     if (confirm(`Supprimer ${team.name} ?`)) {
       this.teamService.deleteTeam(team.id).subscribe({
@@ -177,10 +159,16 @@ export class AdminTeamsComponent implements OnInit {
     }
   }
 
+  /**
+   * Annule l'édition en cours et réinitialise le formulaire
+   */
   cancelEdit(): void {
     this.resetForm();
   }
 
+  /**
+   * Réinitialise le formulaire avec les valeurs par défaut
+   */
   resetForm(): void {
     this.teamForm.reset();
     this.editMode = false;

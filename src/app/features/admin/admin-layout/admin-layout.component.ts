@@ -4,6 +4,10 @@ import { BetService } from '../../../core/services/bet.service';
 import { Bet } from '../../../core/models/bet.model';
 import { RouterOutlet } from '@angular/router';
 
+/**
+ * Composant Layout Admin
+ * Conteneur de routage pour toutes les pages d'administration
+ */
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
@@ -19,20 +23,19 @@ export class AdminLayoutComponent implements OnInit {
   constructor(private betService: BetService) {}
 
   ngOnInit(): void {
-    console.log('🏠 AdminBets component initialized');
     this.loadBets();
   }
 
+  /**
+   * Charge tous les paris
+   * Appelle le service BetService pour récupérer les paris
+   */
   loadBets(): void {
     this.loading.set(true);
     this.error.set(null);
-    console.log('📡 Loading all bets (admin)...');
 
-    // Utiliser getAllBets() qui appelle GET /bets avec le token
     this.betService.getAllBets().subscribe({
       next: (bets) => {
-        console.log('✅ All bets loaded:', bets);
-        console.log('📊 Total bets:', bets.length);
         this.bets.set(bets);
         this.loading.set(false);
       },
@@ -57,10 +60,20 @@ export class AdminLayoutComponent implements OnInit {
     });
   }
 
+  /**
+   * Compte le nombre de paris par statut
+   * @param status Le statut des paris à compter
+   * @returns Le nombre de paris avec le statut donné
+   */
   countByStatus(status: string): number {
     return this.bets().filter((bet) => bet.status === status).length;
   }
 
+  /**
+   * Obtient l'étiquette d'un statut
+   * @param status Le statut dont on veut l'étiquette
+   * @returns L'étiquette du statut
+   */
   getStatusLabel(status: string): string {
     const labels: Record<string, string> = {
       pending: 'En attente',
@@ -71,6 +84,11 @@ export class AdminLayoutComponent implements OnInit {
     return labels[status] || status;
   }
 
+  /**
+   * Analyse une chaîne en tant que nombre à virgule flottante
+   * @param value La chaîne à analyser
+   * @returns Le nombre à virgule flottante analysé
+   */
   parseFloat(value: string): number {
     return parseFloat(value);
   }

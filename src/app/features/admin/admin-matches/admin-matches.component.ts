@@ -53,22 +53,35 @@ export class AdminMatchesComponent implements OnInit {
     this.loadTournaments();
   }
 
+  /**
+   * Charge la liste de tous les matchs depuis l'API
+   */
   loadMatches(): void {
     this.matchService
       .getAllMatches()
       .subscribe((matches) => this.matches.set(matches));
   }
 
+  /**
+   * Charge la liste de toutes les équipes pour les sélecteurs du formulaire
+   */
   loadTeams(): void {
     this.teamService.getAllTeams().subscribe((teams) => this.teams.set(teams));
   }
 
+  /**
+   * Charge la liste de tous les tournois pour le sélecteur du formulaire
+   */
   loadTournaments(): void {
     this.tournamentService
       .getAllTournaments()
       .subscribe((tournaments) => this.tournaments.set(tournaments));
   }
 
+  /**
+   * Soumet le formulaire pour créer ou modifier un match
+   * Selon le mode (création/édition), appelle le service approprié
+   */
   onSubmit(): void {
     if (this.matchForm.valid) {
       this.loading = true;
@@ -96,6 +109,10 @@ export class AdminMatchesComponent implements OnInit {
     }
   }
 
+  /**
+   * Charge les données d'un match dans le formulaire pour édition
+   * @param match - Match à modifier
+   */
   editMatch(match: Match): void {
     this.editMode = true;
     this.currentMatchId = match.id;
@@ -116,6 +133,10 @@ export class AdminMatchesComponent implements OnInit {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  /**
+   * Supprime un match après confirmation
+   * @param match - Match à supprimer
+   */
   deleteMatch(match: Match): void {
     if (confirm('Supprimer ce match ?')) {
       this.matchService.deleteMatch(match.id).subscribe({
@@ -127,10 +148,17 @@ export class AdminMatchesComponent implements OnInit {
     }
   }
 
+  /**
+   * Annule l'édition en cours et réinitialise le formulaire
+   */
   cancelEdit(): void {
     this.resetForm();
   }
 
+  /**
+   * Réinitialise le formulaire avec les valeurs par défaut
+   * Désactive le mode édition
+   */
   resetForm(): void {
     this.matchForm.reset({ format: 'Bo3', status: 'scheduled' });
     this.editMode = false;
