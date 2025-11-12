@@ -1,0 +1,70 @@
+<nav class="navbar">
+  <div class="nav-container">
+    <div class="nav-brand">
+      <a routerLink="/">
+        <span class="logo">🎮</span>
+        <span class="brand-name">E-Sport Betting</span>
+      </a>
+    </div>
+
+    <div class="nav-menu" [class.active]="menuOpen">
+      <a routerLink="/matches" routerLinkActive="active" (click)="closeMenu()">
+        ⚔️ Matchs
+      </a>
+
+      @if (isAuthenticated()) {
+      <a routerLink="/profile" routerLinkActive="active" (click)="closeMenu()">
+        💼 Mon Profil
+      </a>
+      <a
+        routerLink="/bets/my-bets"
+        routerLinkActive="active"
+        (click)="closeMenu()"
+      >
+        🎯 Mes Paris
+      </a>
+      } @if (isAdmin) {
+      <a
+        routerLink="/admin/dashboard"
+        routerLinkActive="active"
+        class="admin-link"
+        (click)="closeMenu()"
+      >
+        👑 Admin Panel
+      </a>
+      <div class="nav-dropdown">
+        <button class="dropdown-toggle">⚙️ Admin</button>
+        <div class="dropdown-menu">
+          <a routerLink="/admin/dashboard" (click)="closeMenu()"
+            >📊 Dashboard</a
+          >
+          <a routerLink="/admin/users" (click)="closeMenu()">👥 Utilisateurs</a>
+          <a routerLink="/admin/teams" (click)="closeMenu()">🏆 Équipes</a>
+          <a routerLink="/admin/matches" (click)="closeMenu()">⚔️ Matchs</a>
+          <a routerLink="/admin/players" (click)="closeMenu()">👤 Joueurs</a>
+          <a routerLink="/admin/tournaments" (click)="closeMenu()"
+            >🏅 Tournois</a
+          >
+        </div>
+      </div>
+      }
+    </div>
+
+    <div class="nav-actions">
+      @if (isAuthenticated()) {
+      <div class="user-info">
+        <span class="balance">💰 {{ currentUser()?.balance }}€</span>
+        <span class="username">{{ currentUser()?.username }}</span>
+        <button class="btn-logout" (click)="logout()">🚪 Déconnexion</button>
+      </div>
+      } @else {
+      <a routerLink="/login" class="btn-login">Se connecter</a>
+      <a routerLink="/register" class="btn-register">S'inscrire</a>
+      }
+    </div>
+
+    <button class="mobile-toggle" (click)="toggleMenu()">
+      {{ menuOpen ? "✕" : "☰" }}
+    </button>
+  </div>
+</nav>

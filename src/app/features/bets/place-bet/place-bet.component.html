@@ -1,0 +1,107 @@
+<div class="bet-container">
+  <h1>💰 Placer un pari</h1>
+
+  @if (match()) {
+  <div class="match-card">
+    <div class="match-header">
+      <span class="tournament">{{ match()!.tournament?.name }}</span>
+      <span class="format">{{ match()!.format }}</span>
+    </div>
+
+    <div class="teams">
+      <div class="team">
+        <img [src]="match()!.team1?.logo_url" [alt]="match()!.team1?.name" />
+        <h3>{{ match()!.team1?.name }}</h3>
+        <div class="odds">Cote: {{ match()!.odds_team1 }}</div>
+      </div>
+
+      <div class="vs">VS</div>
+
+      <div class="team">
+        <img [src]="match()!.team2?.logo_url" [alt]="match()!.team2?.name" />
+        <h3>{{ match()!.team2?.name }}</h3>
+        <div class="odds">Cote: {{ match()!.odds_team2 }}</div>
+      </div>
+    </div>
+
+    <div class="match-date">
+      📅 {{ match()!.scheduled_at | date : "dd/MM/yyyy HH:mm" }}
+    </div>
+  </div>
+
+  <div class="bet-form-card">
+    <h2>Détails du pari</h2>
+
+    <div class="user-balance">
+      💰 Solde disponible: <strong>{{ currentUser()?.balance }}€</strong>
+    </div>
+
+    <form [formGroup]="betForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label>Parier sur *</label>
+        <div class="team-choice">
+          <label class="team-option">
+            <input
+              type="radio"
+              formControlName="team_id"
+              [value]="match()!.team1_id"
+            />
+            <span
+              >{{ match()!.team1?.name }} (cote {{ match()!.odds_team1 }})</span
+            >
+          </label>
+          <label class="team-option">
+            <input
+              type="radio"
+              formControlName="team_id"
+              [value]="match()!.team2_id"
+            />
+            <span
+              >{{ match()!.team2?.name }} (cote {{ match()!.odds_team2 }})</span
+            >
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Montant du pari (€) *</label>
+        <input
+          type="number"
+          formControlName="amount"
+          placeholder="50"
+          min="1"
+          [max]="maxBet"
+          step="1"
+        />
+        <small>Montant minimum: 1€ | Maximum: {{ maxBet }}€</small>
+      </div>
+
+      @if (betForm.get('team_id')?.value && betForm.get('amount')?.value) {
+      <div class="potential-win">
+        <h3>💸 Gain potentiel</h3>
+        <div class="win-amount">{{ calculatePotentialWin() }}€</div>
+        <small>
+          Mise: {{ betForm.get("amount")?.value }}€ × Cote:
+          {{ getSelectedOdds() }} = {{ calculatePotentialWin() }}€
+        </small>
+      </div>
+      }
+
+      <div class="form-actions">
+        <button
+          type="submit"
+          class="btn-bet"
+          [disabled]="betForm.invalid || loading"
+        >
+          {{ loading ? "Traitement..." : "🎯 Confirmer le pari" }}
+        </button>
+        <button type="button" class="btn-cancel" (click)="goBack()">
+          Annuler
+        </button>
+      </div>
+    </form>
+  </div>
+  } @else {
+  <div class="loading">Chargement du match...</div>
+  }
+</div>

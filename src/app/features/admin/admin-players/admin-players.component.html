@@ -1,0 +1,206 @@
+<div class="admin-container">
+  <h1>👤 Gestion des Joueurs</h1>
+
+  <!-- Statistiques -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">👤</div>
+      <div class="stat-content">
+        <h3>{{ players().length }}</h3>
+        <p>Total Joueurs</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🌍</div>
+      <div class="stat-content">
+        <h3>{{ getUniqueNationalities() }}</h3>
+        <p>Nationalités</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">🎮</div>
+      <div class="stat-content">
+        <h3>{{ getUniquePositions() }}</h3>
+        <p>Positions</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulaire de création -->
+  <div class="form-card">
+    <h2>{{ editMode ? "Modifier" : "Créer" }} un joueur</h2>
+    <form [formGroup]="playerForm" (ngSubmit)="onSubmit()">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nom complet *</label>
+          <input
+            type="text"
+            formControlName="name"
+            placeholder="Lee Sang-hyeok"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Game Tag *</label>
+          <input
+            type="text"
+            formControlName="game_tag"
+            placeholder="T1 Faker"
+          />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Position *</label>
+          <select formControlName="position">
+            <option value="">-- Sélectionner --</option>
+            <option value="Top">Top</option>
+            <option value="Jungle">Jungle</option>
+            <option value="Mid">Mid</option>
+            <option value="ADC">ADC</option>
+            <option value="Support">Support</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Date de naissance *</label>
+          <input type="date" formControlName="birth_date" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nationalité *</label>
+          <input
+            type="text"
+            formControlName="nationality"
+            placeholder="South Korea"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>URL Avatar</label>
+          <input
+            type="url"
+            formControlName="avatar_url"
+            placeholder="https://example.com/avatar.jpg"
+          />
+        </div>
+      </div>
+
+      @if (playerForm.get('avatar_url')?.value) {
+      <div class="preview">
+        <img
+          [src]="playerForm.get('avatar_url')?.value"
+          alt="Preview"
+          (error)="onImageError($event)"
+        />
+      </div>
+      }
+
+      <div class="form-actions">
+        <button
+          type="submit"
+          class="btn-primary"
+          [disabled]="playerForm.invalid || loading"
+        >
+          {{ loading ? "Chargement..." : editMode ? "Modifier" : "Créer" }}
+        </button>
+        @if (editMode) {
+        <button type="button" class="btn-secondary" (click)="cancelEdit()">
+          Annuler
+        </button>
+        }
+      </div>
+    </form>
+  </div>
+
+  <!-- Table des joueurs -->
+  <div class="table-card">
+    <h2>Liste des joueurs ({{ players().length }})</h2>
+
+    <!-- Filtres -->
+    <div class="filters">
+      <input
+        type="text"
+        placeholder="🔍 Rechercher un joueur..."
+        (input)="onSearch($event)"
+        class="search-input"
+      />
+      <select (change)="onFilterPosition($event)" class="filter-select">
+        <option value="">Toutes les positions</option>
+        <option value="Top">Top</option>
+        <option value="Jungle">Jungle</option>
+        <option value="Mid">Mid</option>
+        <option value="ADC">ADC</option>
+        <option value="Support">Support</option>
+      </select>
+    </div>
+
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Avatar</th>
+            <th>Nom</th>
+            <th>Game Tag</th>
+            <th>Position</th>
+            <th>Date de naissance</th>
+            <th>Nationalité</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (player of filteredPlayers(); track player.id) {
+          <tr>
+            <td>
+              <img
+                [src]="player.avatar_url"
+                [alt]="player.name"
+                class="player-avatar"
+                (error)="onImageError($event)"
+              />
+            </td>
+            <td>
+              <strong>{{ player.name }}</strong>
+            </td>
+            <td>
+              <span class="game-tag">{{ player.game_tag }}</span>
+            </td>
+            <td>
+              <span [class]="'position-badge ' + player.position.toLowerCase()">
+                {{ player.position }}
+              </span>
+            </td>
+            <td>{{ player.birth_date | date : "dd/MM/yyyy" }}</td>
+            <td>
+              <span class="nationality">{{ player.nationality }}</span>
+            </td>
+            <td>
+              <button
+                class="btn-icon"
+                (click)="editPlayer(player)"
+                title="Modifier"
+              >
+                ✏️
+              </button>
+              <button
+                class="btn-icon danger"
+                (click)="deletePlayer(player)"
+                title="Supprimer"
+              >
+                🗑️
+              </button>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="7" class="no-data">Aucun joueur trouvé</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,105 @@
+<div class="admin-container">
+  <h1>🏆 Gestion des Équipes</h1>
+
+  <div class="form-card">
+    <h2>{{ editMode ? "Modifier" : "Créer" }} une équipe</h2>
+    <form [formGroup]="teamForm" (ngSubmit)="onSubmit()">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nom de l'équipe *</label>
+          <input type="text" formControlName="name" placeholder="Team Alpha" />
+        </div>
+
+        <div class="form-group">
+          <label>Région *</label>
+          <input
+            type="text"
+            formControlName="region"
+            placeholder="EU, NA, KR..."
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Logo de l'équipe (optionnel)</label>
+        <input type="file" (change)="onFileSelected($event)" accept="image/*" />
+        <small
+          >Si vous ne téléchargez pas de logo, un logo par défaut sera
+          utilisé.</small
+        >
+      </div>
+
+      @if (previewUrl) {
+      <div class="preview">
+        <img [src]="previewUrl" alt="Preview" />
+      </div>
+      }
+
+      <div class="form-actions">
+        <button
+          type="submit"
+          class="btn-primary"
+          [disabled]="teamForm.invalid || loading"
+        >
+          {{ loading ? "Chargement..." : editMode ? "Modifier" : "Créer" }}
+        </button>
+        @if (editMode) {
+        <button type="button" class="btn-secondary" (click)="cancelEdit()">
+          Annuler
+        </button>
+        }
+      </div>
+    </form>
+  </div>
+
+  <div class="table-card">
+    <h2>Liste des équipes ({{ teams().length }})</h2>
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Logo</th>
+            <th>Nom</th>
+            <th>Région</th>
+            <th>Victoires</th>
+            <th>Défaites</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (team of teams(); track team.id) {
+          <tr>
+            <td>
+              <img [src]="team.logo_url" [alt]="team.name" class="team-logo" />
+            </td>
+            <td>
+              <strong>{{ team.name }}</strong>
+            </td>
+            <td>
+              <span class="region-badge">{{ team.region }}</span>
+            </td>
+            <td class="wins">{{ team.wins }}</td>
+            <td class="losses">{{ team.losses }}</td>
+            <td>
+              <button
+                class="btn-icon"
+                (click)="editTeam(team)"
+                title="Modifier"
+              >
+                ✏️
+              </button>
+              <button
+                class="btn-icon danger"
+                (click)="deleteTeam(team)"
+                title="Supprimer"
+              >
+                🗑️
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

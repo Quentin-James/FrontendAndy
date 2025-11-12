@@ -1,0 +1,86 @@
+<div class="matches-container">
+  <h1>⚔️ Matchs E-sport</h1>
+
+  <div class="tabs">
+    <button
+      [class.active]="selectedTab() === 'scheduled'"
+      (click)="selectTab('scheduled')"
+    >
+      📅 À venir
+    </button>
+    <button
+      [class.active]="selectedTab() === 'live'"
+      (click)="selectTab('live')"
+    >
+      🔴 En cours
+    </button>
+    <button
+      [class.active]="selectedTab() === 'finished'"
+      (click)="selectTab('finished')"
+    >
+      ✅ Terminés
+    </button>
+  </div>
+
+  <div class="matches-grid">
+    @for (match of displayedMatches(); track match.id) {
+    <div class="match-card" [class.live]="match.status === 'live'">
+      <div class="match-header">
+        <span class="tournament">{{ match.tournament?.name }}</span>
+        <span [class]="'status-badge ' + match.status">{{
+          getStatusLabel(match.status)
+        }}</span>
+      </div>
+
+      <div class="teams">
+        <div class="team">
+          <img [src]="match.team1?.logo_url" [alt]="match.team1?.name" />
+          <h3>{{ match.team1?.name }}</h3>
+          @if (match.score1 !== null) {
+          <div
+            class="score"
+            [class.winner]="match.winner?.id === match.team1_id"
+          >
+            {{ match.score1 }}
+          </div>
+          }
+        </div>
+
+        <div class="vs">VS</div>
+
+        <div class="team">
+          <img [src]="match.team2?.logo_url" [alt]="match.team2?.name" />
+          <h3>{{ match.team2?.name }}</h3>
+          @if (match.score2 !== null) {
+          <div
+            class="score"
+            [class.winner]="match.winner?.id === match.team2_id"
+          >
+            {{ match.score2 }}
+          </div>
+          }
+        </div>
+      </div>
+
+      <div class="match-info">
+        <p>📅 {{ match.scheduled_at | date : "short" }}</p>
+        <p>🎮 {{ match.format }}</p>
+      </div>
+
+      @if (match.status === 'scheduled') {
+      <button class="btn-bet" [routerLink]="['/bets/place', match.id]">
+        💰 Parier
+      </button>
+      } @else {
+      <button class="btn-view" [routerLink]="['/matches', match.id]">
+        👁️ Voir détails
+      </button>
+      }
+    </div>
+    } @if (displayedMatches().length === 0) {
+    <div class="no-matches">
+      <p>Aucun match {{ getStatusLabel(selectedTab()) }}</p>
+    </div>
+    }
+  </div>
+</div>

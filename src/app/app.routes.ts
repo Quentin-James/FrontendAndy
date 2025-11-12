@@ -67,7 +67,7 @@ export const routes: Routes = [
     canActivate: [authGuard, adminGuard],
     loadComponent: () =>
       import('./features/admin/admin-layout/admin-layout.component').then(
-        (m) => m.AdminLayoutComponent // ← Corriger ici (pas AdminBetsComponent)
+        (m) => m.AdminLayoutComponent
       ),
     children: [
       {

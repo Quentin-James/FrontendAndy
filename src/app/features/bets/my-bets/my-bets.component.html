@@ -1,0 +1,66 @@
+<div class="bets-container">
+  <h1>🎯 Mes Paris</h1>
+
+  <div class="stats-bar">
+    <div class="stat">
+      <span class="label">Total</span>
+      <span class="value">{{ bets().length }}</span>
+    </div>
+    <div class="stat">
+      <span class="label">En attente</span>
+      <span class="value pending">{{ countByStatus("pending") }}</span>
+    </div>
+    <div class="stat">
+      <span class="label">Gagnés</span>
+      <span class="value won">{{ countByStatus("won") }}</span>
+    </div>
+    <div class="stat">
+      <span class="label">Perdus</span>
+      <span class="value lost">{{ countByStatus("lost") }}</span>
+    </div>
+  </div>
+
+  <div class="bets-list">
+    @for (bet of bets(); track bet.id) {
+    <div class="bet-card" [class]="bet.status">
+      <div class="bet-header">
+        <span [class]="'status-badge ' + bet.status">{{
+          getStatusLabel(bet.status)
+        }}</span>
+        <span class="date">{{ bet.created_at | date : "short" }}</span>
+      </div>
+
+      <div class="match-info">
+        <div class="teams">
+          <span>{{ bet.match?.team1?.name }}</span>
+          <span class="vs">VS</span>
+          <span>{{ bet.match?.team2?.name }}</span>
+        </div>
+        <p class="bet-team">
+          Pari sur: <strong>{{ bet.team?.name }}</strong>
+        </p>
+      </div>
+
+      <div class="bet-details">
+        <div class="detail">
+          <span class="label">Mise</span>
+          <span class="value">{{ bet.amount }}€</span>
+        </div>
+        <div class="detail">
+          <span class="label">Cote</span>
+          <span class="value">{{ bet.odds }}</span>
+        </div>
+        <div class="detail">
+          <span class="label">Gain potentiel</span>
+          <span class="value potential">{{ bet.potential_win }}€</span>
+        </div>
+      </div>
+    </div>
+    } @empty {
+    <div class="no-bets">
+      <p>Vous n'avez pas encore placé de paris</p>
+      <a routerLink="/matches" class="btn-primary">Voir les matchs</a>
+    </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,14 @@
+<div class="home-container">
+  <div class="hero">
+    <h1>🎮 E-Sport Betting</h1>
+    <p>La plateforme de paris e-sport nouvelle génération</p>
+
+    @if (authService.isAuthenticated()) { @if (authService.isAdmin()) {
+    <a routerLink="/admin/dashboard" class="btn-hero">👑 Dashboard Admin</a>
+    } @else {
+    <a routerLink="/matches" class="btn-hero">⚔️ Voir les matchs</a>
+    } } @else {
+    <a routerLink="/login" class="btn-hero">Se connecter</a>
+    }
+  </div>
+</div>

@@ -1,0 +1,93 @@
+<div class="admin-bets-container">
+  <div class="header">
+    <h1>🎯 Supervision des Paris</h1>
+    <div class="stats">
+      <div class="stat-card">
+        <span class="stat-label">Total</span>
+        <span class="stat-value">{{ bets().length }}</span>
+      </div>
+      <div class="stat-card pending">
+        <span class="stat-label">En attente</span>
+        <span class="stat-value">{{ countByStatus("pending") }}</span>
+      </div>
+      <div class="stat-card success">
+        <span class="stat-label">Gagnés</span>
+        <span class="stat-value">{{ countByStatus("won") }}</span>
+      </div>
+      <div class="stat-card danger">
+        <span class="stat-label">Perdus</span>
+        <span class="stat-value">{{ countByStatus("lost") }}</span>
+      </div>
+    </div>
+  </div>
+
+  @if (loading()) {
+  <div class="loading">Chargement des paris...</div>
+  } @else if (error()) {
+  <div class="error-message">
+    <p>❌ {{ error() }}</p>
+    <button (click)="loadBets()" class="btn-retry">Réessayer</button>
+  </div>
+  } @else if (bets().length === 0) {
+  <div class="no-data">
+    <p>Aucun pari pour le moment</p>
+  </div>
+  } @else {
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Utilisateur</th>
+          <th>Match</th>
+          <th>Équipe</th>
+          <th>Mise</th>
+          <th>Cote</th>
+          <th>Gain potentiel</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (bet of bets(); track bet.id) {
+        <tr [class]="bet.status">
+          <td>#{{ bet.id }}</td>
+          <td>
+            <div class="user-info">
+              <span class="username">{{ bet.user?.username || "N/A" }}</span>
+              <span class="user-id">ID: {{ bet.user_id }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="match-info">
+              <span>{{ bet.match?.team1?.name || "Team 1" }}</span>
+              <span class="vs">vs</span>
+              <span>{{ bet.match?.team2?.name || "Team 2" }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="team-bet">{{
+              bet.team?.name || "Team " + bet.team_id
+            }}</span>
+          </td>
+          <td class="amount">{{ bet.amount }}€</td>
+          <td class="odds">{{ bet.odds }}</td>
+          <td class="potential-win">
+            {{
+              bet.potential_win ||
+                (parseFloat(bet.amount) * parseFloat(bet.odds)).toFixed(2)
+            }}€
+          </td>
+          <td>
+            <span [class]="'status-badge ' + bet.status">
+              {{ getStatusLabel(bet.status) }}
+            </span>
+          </td>
+          <td class="date">{{ bet.created_at | date : "short" }}</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+</div>

@@ -1,0 +1,150 @@
+<div class="admin-container">
+  <h1>⚔️ Gestion des Matchs</h1>
+
+  <div class="form-card">
+    <h2>{{ editMode ? "Modifier" : "Créer" }} un match</h2>
+    <form [formGroup]="matchForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label>Tournoi *</label>
+        <select formControlName="tournament_id">
+          <option value="">Sélectionner un tournoi</option>
+          @for (tournament of tournaments(); track tournament.id) {
+          <option [value]="tournament.id">{{ tournament.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Équipe 1 *</label>
+          <select formControlName="team1_id">
+            <option value="">Sélectionner</option>
+            @for (team of teams(); track team.id) {
+            <option [value]="team.id">{{ team.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Équipe 2 *</label>
+          <select formControlName="team2_id">
+            <option value="">Sélectionner</option>
+            @for (team of teams(); track team.id) {
+            <option [value]="team.id">{{ team.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date et heure *</label>
+          <input type="datetime-local" formControlName="scheduled_at" />
+        </div>
+
+        <div class="form-group">
+          <label>Format *</label>
+          <select formControlName="format">
+            <option value="Bo1">Bo1 (Best of 1)</option>
+            <option value="Bo3">Bo3 (Best of 3)</option>
+            <option value="Bo5">Bo5 (Best of 5)</option>
+          </select>
+        </div>
+      </div>
+
+      @if (editMode) {
+      <div class="form-row">
+        <div class="form-group">
+          <label>Statut</label>
+          <select formControlName="status">
+            <option value="scheduled">Programmé</option>
+            <option value="live">En cours</option>
+            <option value="finished">Terminé</option>
+            <option value="cancelled">Annulé</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Score Team 1</label>
+          <input type="number" formControlName="score1" min="0" />
+        </div>
+
+        <div class="form-group">
+          <label>Score Team 2</label>
+          <input type="number" formControlName="score2" min="0" />
+        </div>
+      </div>
+      }
+
+      <div class="form-actions">
+        <button
+          type="submit"
+          class="btn-primary"
+          [disabled]="matchForm.invalid || loading"
+        >
+          {{ loading ? "Chargement..." : editMode ? "Modifier" : "Créer" }}
+        </button>
+        @if (editMode) {
+        <button type="button" class="btn-secondary" (click)="cancelEdit()">
+          Annuler
+        </button>
+        }
+      </div>
+    </form>
+  </div>
+
+  <div class="table-card">
+    <h2>Liste des matchs ({{ matches().length }})</h2>
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Tournoi</th>
+            <th>Match</th>
+            <th>Date</th>
+            <th>Format</th>
+            <th>Score</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (match of matches(); track match.id) {
+          <tr>
+            <td>{{ match.tournament?.name }}</td>
+            <td>
+              <div class="match-teams">
+                <span>{{ match.team1?.name }}</span>
+                <span class="vs">VS</span>
+                <span>{{ match.team2?.name }}</span>
+              </div>
+            </td>
+            <td>{{ match.scheduled_at | date : "short" }}</td>
+            <td>
+              <span class="format-badge">{{ match.format }}</span>
+            </td>
+            <td>
+              @if (match.score1 !== null && match.score2 !== null) {
+              <span class="score">{{ match.score1 }} - {{ match.score2 }}</span>
+              } @else {
+              <span class="no-score">-</span>
+              }
+            </td>
+            <td>
+              <span [class]="'status-badge ' + match.status">{{
+                match.status
+              }}</span>
+            </td>
+            <td>
+              <button class="btn-icon" (click)="editMatch(match)">✏️</button>
+              <button class="btn-icon danger" (click)="deleteMatch(match)">
+                🗑️
+              </button>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
