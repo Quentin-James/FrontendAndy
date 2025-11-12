@@ -12,8 +12,8 @@ export interface Match {
   score1?: number | null;
   score2?: number | null;
   winner_id?: number | null;
-  odds_team1?: number; // ← Rendre optionnel avec ?
-  odds_team2?: number; // ← Rendre optionnel avec ?
+  odds_team1?: number;
+  odds_team2?: number;
   created_at?: Date;
   tournament?: {
     id: number;

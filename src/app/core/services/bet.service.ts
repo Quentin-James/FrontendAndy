@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, BehaviorSubject, of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   Bet,
@@ -8,7 +8,7 @@ import {
   BetCalculation,
   AccumulatorBet,
 } from '../models/bet.model';
-import { tap, catchError } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root',
@@ -16,55 +16,28 @@ import { tap, catchError } from 'rxjs/operators';
 export class BetService {
   private apiUrl = `${environment.apiUrl}/bets`;
 
-  // Stockage local des paris en attendant que le backend ait un GET /bets
-  private myBetsSubject = new BehaviorSubject<Bet[]>([]);
-  public myBets$ = this.myBetsSubject.asObservable();
+  constructor(private http: HttpClient) {}
 
-  constructor(private http: HttpClient) {
-    // Charger les paris depuis localStorage au démarrage
-    this.loadBetsFromStorage();
-  }
-
-  private loadBetsFromStorage(): void {
-    const stored = localStorage.getItem('my_bets');
-    if (stored) {
-      try {
-        const bets = JSON.parse(stored);
-        this.myBetsSubject.next(bets);
-        console.log('✅ Loaded bets from localStorage:', bets);
-      } catch (e) {
-        console.error('❌ Error parsing stored bets:', e);
-      }
-    }
-  }
-
-  private saveBetsToStorage(bets: Bet[]): void {
-    localStorage.setItem('my_bets', JSON.stringify(bets));
-    this.myBetsSubject.next(bets);
-  }
-
+  /**
+   * Crée un nouveau pari
+   * @param data - Données du pari (match_id, team_id, amount, odds)
+   * @returns Observable contenant le pari créé
+   */
   createBet(data: CreateBetDto): Observable<Bet> {
-    console.log('🎯 Creating bet at URL:', this.apiUrl);
-    console.log('🎯 Bet data:', data);
-
     return this.http.post<Bet>(this.apiUrl, data).pipe(
-      tap((bet) => {
-        console.log('✅ Bet created successfully:', bet);
-      }),
       catchError((error) => {
-        console.error('❌ Bet creation failed');
-        console.error('❌ Status:', error.status);
-        console.error('❌ Error:', error);
         throw error;
       })
     );
   }
 
+  /**
+   * Récupère tous les paris de l'utilisateur connecté
+   * @returns Observable contenant la liste des paris de l'utilisateur
+   */
   getMyBets(): Observable<Bet[]> {
-    // Récupérer l'ID de l'utilisateur depuis le localStorage
     const userJson = localStorage.getItem('current_user');
     if (!userJson) {
-      console.error('❌ No current user found in localStorage');
       return of([]);
     }
 
@@ -73,61 +46,37 @@ export class BetService {
       const user = JSON.parse(userJson);
       userId = user.id;
     } catch (e) {
-      console.error('❌ Error parsing current user:', e);
       return of([]);
     }
 
     const url = `${this.apiUrl}/user/${userId}`;
-    console.log('📡 Fetching my bets from:', url);
 
     return this.http.get<Bet[]>(url).pipe(
-      tap((bets) => {
-        console.log('✅ Bets loaded from API:', bets);
-        console.log('📊 Total bets:', bets.length);
-      }),
       catchError((error) => {
-        console.error('❌ Error loading bets:', error);
-        console.error('❌ Status:', error.status);
-        console.error('❌ URL:', url);
         return of([]);
       })
     );
   }
 
+  /**
+   * Supprime un pari par son ID
+   * @param id - ID du pari à supprimer
+   * @returns Observable vide confirmant la suppression
+   */
   deleteBet(id: number): Observable<void> {
-    console.log('🗑️ Deleting bet:', id);
-    
     return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
-      tap(() => {
-        console.log('✅ Bet deleted successfully');
-        
-        // Retirer aussi du localStorage si utilisé
-        const currentBets = this.myBetsSubject?.value || [];
-        const updatedBets = currentBets.filter((bet) => bet.id !== id);
-        if (this.myBetsSubject) {
-          this.saveBetsToStorage(updatedBets);
-        }
-      }),
       catchError((error) => {
-        console.error('❌ Error deleting bet:', error);
-        
-        if (error.status === 404) {
-          console.warn('⚠️ DELETE endpoint not available (404)');
-          // Si l'API ne marche pas, supprimer quand même du localStorage
-          if (this.myBetsSubject) {
-            const currentBets = this.myBetsSubject.value;
-            const updatedBets = currentBets.filter((bet) => bet.id !== id);
-            this.saveBetsToStorage(updatedBets);
-          }
-          return of(void 0);
-        }
-        
         throw error;
       })
     );
   }
 
-  // Calculs
+  /**
+   * Calcule le gain potentiel d'un pari
+   * @param amount - Montant misé
+   * @param odds - Cote du pari
+   * @returns Observable contenant le calcul du gain potentiel
+   */
   calculatePotentialWin(
     amount: number,
     odds: number
@@ -141,6 +90,12 @@ export class BetService {
     );
   }
 
+  /**
+   * Calcule le profit net d'un pari (gain - mise)
+   * @param amount - Montant misé
+   * @param odds - Cote du pari
+   * @returns Observable contenant le calcul du profit
+   */
   calculateProfit(amount: number, odds: number): Observable<BetCalculation> {
     const params = new HttpParams()
       .set('amount', amount.toString())
@@ -150,6 +105,11 @@ export class BetService {
     });
   }
 
+  /**
+   * Valide une cote selon les règles métier
+   * @param odds - Cote à valider
+   * @returns Observable contenant le résultat de validation
+   */
   validateOdds(odds: number): Observable<BetCalculation> {
     const params = new HttpParams().set('odds', odds.toString());
     return this.http.get<BetCalculation>(`${this.apiUrl}/validate/odds`, {
@@ -157,6 +117,11 @@ export class BetService {
     });
   }
 
+  /**
+   * Calcule la probabilité implicite d'une cote
+   * @param odds - Cote à analyser
+   * @returns Observable contenant la probabilité implicite en pourcentage
+   */
   getImpliedProbability(odds: number): Observable<BetCalculation> {
     const params = new HttpParams().set('odds', odds.toString());
     return this.http.get<BetCalculation>(
@@ -167,6 +132,11 @@ export class BetService {
     );
   }
 
+  /**
+   * Calcule la cote totale d'un pari combiné (accumulator)
+   * @param data - Données du pari combiné contenant plusieurs paris
+   * @returns Observable contenant la cote totale combinée
+   */
   calculateAccumulatorOdds(
     data: AccumulatorBet
   ): Observable<{ total_odds: number }> {
@@ -176,6 +146,12 @@ export class BetService {
     );
   }
 
+  /**
+   * Calcule le retour sur investissement (ROI)
+   * @param totalStaked - Montant total misé
+   * @param totalReturned - Montant total récupéré
+   * @returns Observable contenant le ROI en pourcentage
+   */
   calculateROI(
     totalStaked: number,
     totalReturned: number
@@ -188,23 +164,13 @@ export class BetService {
     });
   }
 
+  /**
+   * Récupère tous les paris de la plateforme (accès admin)
+   * @returns Observable contenant la liste complète de tous les paris
+   */
   getAllBets(): Observable<Bet[]> {
-    console.log('📡 Fetching all bets from:', this.apiUrl);
-    console.log(
-      '🔐 Authorization:',
-      localStorage.getItem('access_token') ? 'Present' : 'Missing'
-    );
-
     return this.http.get<Bet[]>(this.apiUrl).pipe(
-      tap((bets) => {
-        console.log('✅ All bets loaded:', bets);
-        console.log('📊 Total bets:', bets.length);
-      }),
       catchError((error) => {
-        console.error('❌ Error loading all bets');
-        console.error('❌ Status:', error.status);
-        console.error('❌ URL:', this.apiUrl);
-        console.error('❌ Error:', error);
         throw error;
       })
     );

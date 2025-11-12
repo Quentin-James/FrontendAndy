@@ -33,7 +33,6 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       console.error('HTTP Error:', message, error);
-      alert(message); // Remplacer par un service de notification
 
       return throwError(() => error);
     })

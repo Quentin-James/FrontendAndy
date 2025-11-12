@@ -18,28 +18,22 @@ export class AdminBetsComponent implements OnInit {
   constructor(private betService: BetService) {}
 
   ngOnInit(): void {
-    console.log('🏠 AdminBets component initialized');
     this.loadBets();
   }
 
+  /**
+   * Charge tous les paris de la plateforme (accès admin uniquement)
+   */
   loadBets(): void {
     this.loading.set(true);
     this.error.set(null);
-    console.log('📡 Loading all bets (admin)...');
 
-    // Utiliser getAllBets() qui appelle GET /bets avec le token
     this.betService.getAllBets().subscribe({
       next: (bets) => {
-        console.log('✅ All bets loaded:', bets);
-        console.log('📊 Total bets:', bets.length);
         this.bets.set(bets);
         this.loading.set(false);
       },
       error: (error) => {
-        console.error('❌ Error loading bets:', error);
-        console.error('❌ Status:', error.status);
-        console.error('❌ Message:', error.error?.message);
-
         let errorMsg = 'Erreur lors du chargement des paris';
 
         if (error.status === 401) {
@@ -56,10 +50,20 @@ export class AdminBetsComponent implements OnInit {
     });
   }
 
+  /**
+   * Compte le nombre de paris par statut
+   * @param status - Statut à compter (pending, won, lost, cancelled)
+   * @returns Nombre de paris avec ce statut
+   */
   countByStatus(status: string): number {
     return this.bets().filter((bet) => bet.status === status).length;
   }
 
+  /**
+   * Traduit le statut d'un pari en français
+   * @param status - Statut du pari en anglais
+   * @returns Label en français
+   */
   getStatusLabel(status: string): string {
     const labels: Record<string, string> = {
       pending: 'En attente',
@@ -70,6 +74,11 @@ export class AdminBetsComponent implements OnInit {
     return labels[status] || status;
   }
 
+  /**
+   * Convertit une chaîne en nombre décimal
+   * @param value - Valeur à convertir
+   * @returns Nombre décimal
+   */
   parseFloat(value: string): number {
     return parseFloat(value);
   }

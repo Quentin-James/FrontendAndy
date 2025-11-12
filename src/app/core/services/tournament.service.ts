@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
   Tournament,
@@ -17,62 +17,75 @@ export class TournamentService {
 
   constructor(private http: HttpClient) {}
 
+  /**
+   * Récupère la liste de tous les tournois
+   * @returns Observable contenant la liste complète des tournois
+   */
   getAllTournaments(): Observable<Tournament[]> {
-    console.log('📡 Fetching all tournaments from:', this.apiUrl);
     return this.http.get<Tournament[]>(this.apiUrl);
   }
 
+  /**
+   * Récupère les détails d'un tournoi spécifique
+   * @param id - ID du tournoi à récupérer
+   * @returns Observable contenant les détails du tournoi
+   */
   getTournamentById(id: number): Observable<Tournament> {
-    console.log('📡 Fetching tournament:', id);
     return this.http.get<Tournament>(`${this.apiUrl}/${id}`);
   }
 
+  /**
+   * Filtre les tournois par statut
+   * @param status - Statut du tournoi (upcoming, ongoing, finished)
+   * @returns Observable contenant la liste des tournois filtrés
+   */
   getTournamentsByStatus(status: string): Observable<Tournament[]> {
     const params = new HttpParams().set('status', status);
-    console.log('📡 Fetching tournaments by status:', status);
     return this.http.get<Tournament[]>(`${this.apiUrl}/status`, { params });
   }
 
+  /**
+   * Filtre les tournois par jeu
+   * @param game - Nom du jeu (ex: League of Legends, Valorant, etc.)
+   * @returns Observable contenant la liste des tournois pour ce jeu
+   */
   getTournamentsByGame(game: string): Observable<Tournament[]> {
     const params = new HttpParams().set('game', game);
-    console.log('🎮 Fetching tournaments by game:', game);
     return this.http.get<Tournament[]>(`${this.apiUrl}/game`, { params });
   }
 
+  /**
+   * Crée un nouveau tournoi
+   * @param data - Données du tournoi à créer (name, game, prize_pool, start_date, end_date, logo_url, status)
+   * @returns Observable contenant le tournoi créé
+   */
   createTournament(data: CreateTournamentDto): Observable<Tournament> {
-    console.log('➕ Creating tournament with JSON');
-    console.log('API URL:', this.apiUrl);
-    console.log('Payload:', JSON.stringify(data, null, 2));
-    console.log(
-      'Token:',
-      localStorage.getItem('access_token') ? 'exists' : 'missing'
-    );
-
     return this.http.post<Tournament>(this.apiUrl, data).pipe(
-      tap((response) => {
-        console.log('✅ Tournament created successfully:', response);
-      }),
       catchError((error) => {
-        console.error('❌ Error creating tournament:', error);
-        console.error('Status:', error.status);
-        console.error('Status text:', error.statusText);
-        console.error('Error body:', error.error);
-        console.error('URL:', error.url);
         return throwError(() => error);
       })
     );
   }
 
+  /**
+   * Met à jour un tournoi existant
+   * @param id - ID du tournoi à modifier
+   * @param data - Données à mettre à jour
+   * @returns Observable contenant le tournoi mis à jour
+   */
   updateTournament(
     id: number,
     data: UpdateTournamentDto
   ): Observable<Tournament> {
-    console.log('🔄 Updating tournament:', id, data);
     return this.http.put<Tournament>(`${this.apiUrl}/${id}`, data);
   }
 
+  /**
+   * Supprime un tournoi
+   * @param id - ID du tournoi à supprimer
+   * @returns Observable vide confirmant la suppression
+   */
   deleteTournament(id: number): Observable<void> {
-    console.log('🗑️ Deleting tournament:', id);
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }

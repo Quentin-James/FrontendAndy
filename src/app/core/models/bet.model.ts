@@ -19,7 +19,7 @@ export interface Bet {
 
 export interface CreateBetDto {
   match_id: number;
-  team_id: number; // ← Changer de selected_team_id à team_id
+  team_id: number;
   amount: number;
   odds: number;
 }
