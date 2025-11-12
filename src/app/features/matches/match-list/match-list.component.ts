@@ -22,6 +22,9 @@ export class MatchListComponent implements OnInit {
     this.loadMatches();
   }
 
+  /**
+   * Charge tous les matchs depuis l'API et applique le filtre par défaut
+   */
   loadMatches(): void {
     this.matchService.getAllMatches().subscribe((matches) => {
       this.allMatches.set(matches);
@@ -29,11 +32,18 @@ export class MatchListComponent implements OnInit {
     });
   }
 
+  /**
+   * Change l'onglet actif et filtre les matchs selon le statut sélectionné
+   * @param status - Statut des matchs à afficher (scheduled, live, finished)
+   */
   selectTab(status: 'scheduled' | 'live' | 'finished'): void {
     this.selectedTab.set(status);
     this.filterMatches();
   }
 
+  /**
+   * Filtre les matchs selon le statut de l'onglet actif
+   */
   filterMatches(): void {
     const filtered = this.allMatches().filter(
       (m) => m.status === this.selectedTab()
@@ -41,6 +51,11 @@ export class MatchListComponent implements OnInit {
     this.displayedMatches.set(filtered);
   }
 
+  /**
+   * Traduit le statut d'un match en français
+   * @param status - Statut du match en anglais
+   * @returns Label en français
+   */
   getStatusLabel(status: string): string {
     const labels: Record<string, string> = {
       scheduled: 'Programmé',

@@ -50,61 +50,65 @@ export class UserProfileComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    console.log('🏠 UserProfile component initialized');
     const user = this.currentUser();
-    console.log('👤 Current user:', user);
-    console.log('💰 Current balance:', user?.balance);
 
     if (user) {
       this.loadTransactions(user.id);
       this.loadUserStats(user.id);
     } else {
-      console.warn('⚠️ No user found, fetching profile...');
       // Si pas d'utilisateur, recharger le profil
       this.authService.getProfile().subscribe({
         next: (profileUser) => {
-          console.log('✅ Profile loaded:', profileUser);
           this.loadTransactions(profileUser.id);
           this.loadUserStats(profileUser.id);
         },
         error: (error) => {
-          console.error('❌ Error loading profile:', error);
+          // Gestion silencieuse de l'erreur
         },
       });
     }
   }
 
+  /**
+   * Charge l'historique des transactions d'un utilisateur
+   * @param userId - ID de l'utilisateur
+   */
   loadTransactions(userId: number): void {
-    console.log('📡 Loading transactions for user:', userId);
     this.transactionService.getUserTransactionStats(userId).subscribe({
       next: (transactions: Transaction[]) => {
-        console.log('✅ Transactions loaded:', transactions);
         this.transactions.set(transactions);
       },
       error: (error: any) => {
-        console.error('❌ Error loading transactions:', error);
+        // Gestion silencieuse de l'erreur
       },
     });
   }
 
+  /**
+   * Charge les statistiques d'un utilisateur (paris totaux, win rate, etc.)
+   * @param userId - ID de l'utilisateur
+   */
   loadUserStats(userId: number): void {
     this.userService.getUserProfile(userId).subscribe({
       next: (stats) => {
         this.userStats = stats;
       },
       error: (error) => {
-        console.error('❌ Error loading stats:', error);
+        // Gestion silencieuse de l'erreur
       },
     });
   }
 
+  /**
+   * Traite le dépôt d'argent sur le compte utilisateur
+   * Crée une transaction et met à jour le solde
+   */
   onDeposit(): void {
     if (this.depositForm.valid) {
       this.loading = true;
       const user = this.currentUser();
 
       if (!user) {
-        console.error('❌ No user found!');
         this.loading = false;
         return;
       }
@@ -112,11 +116,6 @@ export class UserProfileComponent implements OnInit {
       const amount = Number(this.depositForm.value.amount);
       const currentBalance = parseFloat(user.balance || '0');
       const newBalance = currentBalance + amount;
-
-      console.log('💰 Deposit calculation:');
-      console.log('  Current balance:', currentBalance);
-      console.log('  Deposit amount:', amount);
-      console.log('  New balance:', newBalance);
 
       const data = {
         user_id: user.id,
@@ -126,20 +125,11 @@ export class UserProfileComponent implements OnInit {
         description: this.depositForm.value.description || 'Dépôt',
       };
 
-      console.log('💰 Creating deposit transaction:', data);
-
       this.transactionService.createTransaction(data).subscribe({
         next: (response) => {
-          console.log('✅ Transaction created:', response);
-
-          // Utiliser PATCH /users/{id}/balance au lieu de PUT /users/:id
-          console.log('📤 Updating user balance via PATCH to:', newBalance);
-
+          // Utiliser PATCH /users/{id}/balance
           this.userService.updateUserBalance(user.id, newBalance).subscribe({
             next: (updatedUser) => {
-              console.log('✅ Balance updated in database:', updatedUser);
-              console.log('✅ New balance from API:', updatedUser.balance);
-
               // Forcer la mise à jour du signal
               const balanceString = newBalance.toFixed(2);
               const userWithNewBalance = {
@@ -147,7 +137,6 @@ export class UserProfileComponent implements OnInit {
                 balance: balanceString,
               };
 
-              console.log('🔄 Forcing signal update');
               this.authService.currentUser.set(userWithNewBalance);
               this.cdr.detectChanges();
 
@@ -162,7 +151,6 @@ export class UserProfileComponent implements OnInit {
               this.loading = false;
             },
             error: (error: any) => {
-              console.error('❌ Error updating balance:', error);
               alert(
                 '⚠️ Transaction créée mais erreur lors de la mise à jour du solde. Rechargez la page.'
               );
@@ -171,7 +159,6 @@ export class UserProfileComponent implements OnInit {
           });
         },
         error: (error: any) => {
-          console.error('❌ Error creating transaction:', error);
           alert(
             `Erreur: ${
               error.error?.message || "Impossible d'effectuer le dépôt"
@@ -183,23 +170,22 @@ export class UserProfileComponent implements OnInit {
     }
   }
 
+  /**
+   * Traite le retrait d'argent du compte utilisateur
+   * Vérifie le solde disponible, crée une transaction et met à jour le solde
+   */
   onWithdraw(): void {
     if (this.withdrawForm.valid) {
       this.loading = true;
       const user = this.currentUser();
 
       if (!user) {
-        console.error('❌ No user found!');
         this.loading = false;
         return;
       }
 
       const amount = Number(this.withdrawForm.value.amount);
       const currentBalance = parseFloat(user.balance || '0');
-
-      console.log('💸 Withdraw calculation:');
-      console.log('  Current balance:', currentBalance);
-      console.log('  Withdraw amount:', amount);
 
       if (amount > currentBalance) {
         alert(
@@ -212,7 +198,6 @@ export class UserProfileComponent implements OnInit {
       }
 
       const newBalance = currentBalance - amount;
-      console.log('  New balance:', newBalance);
 
       const data = {
         user_id: user.id,
@@ -222,20 +207,11 @@ export class UserProfileComponent implements OnInit {
         description: this.withdrawForm.value.description || 'Retrait',
       };
 
-      console.log('💸 Creating withdrawal transaction:', data);
-
       this.transactionService.createTransaction(data).subscribe({
         next: (response) => {
-          console.log('✅ Transaction created:', response);
-
           // Utiliser PATCH /users/{id}/balance
-          console.log('📤 Updating user balance via PATCH to:', newBalance);
-
           this.userService.updateUserBalance(user.id, newBalance).subscribe({
             next: (updatedUser) => {
-              console.log('✅ Balance updated in database:', updatedUser);
-              console.log('✅ New balance from API:', updatedUser.balance);
-
               // Forcer la mise à jour du signal
               const balanceString = newBalance.toFixed(2);
               const userWithNewBalance = {
@@ -243,7 +219,6 @@ export class UserProfileComponent implements OnInit {
                 balance: balanceString,
               };
 
-              console.log('🔄 Forcing signal update');
               this.authService.currentUser.set(userWithNewBalance);
               this.cdr.detectChanges();
 
@@ -258,7 +233,6 @@ export class UserProfileComponent implements OnInit {
               this.loading = false;
             },
             error: (error: any) => {
-              console.error('❌ Error updating balance:', error);
               alert(
                 '⚠️ Transaction créée mais erreur lors de la mise à jour du solde. Rechargez la page.'
               );
@@ -267,7 +241,6 @@ export class UserProfileComponent implements OnInit {
           });
         },
         error: (error: any) => {
-          console.error('❌ Error creating transaction:', error);
           alert(
             `Erreur: ${
               error.error?.message || "Impossible d'effectuer le retrait"
@@ -279,6 +252,11 @@ export class UserProfileComponent implements OnInit {
     }
   }
 
+  /**
+   * Traduit le type de transaction en français avec icône
+   * @param type - Type de transaction en anglais
+   * @returns Label en français avec icône
+   */
   getTransactionLabel(type: string): string {
     const labels: Record<string, string> = {
       deposit: '💳 Dépôt',
@@ -291,12 +269,20 @@ export class UserProfileComponent implements OnInit {
     return labels[type] || type;
   }
 
-  // Return the current user's balance as a number or 0 if no user is available.
+  /**
+   * Retourne le solde actuel de l'utilisateur connecté
+   * @returns Solde disponible ou 0 si aucun utilisateur
+   */
   get currentBalance(): number {
     const u = this.currentUser();
     return u ? parseFloat(u.balance) : 0;
   }
 
+  /**
+   * Détermine la classe CSS selon le type de transaction
+   * @param type - Type de transaction
+   * @returns Classe CSS (amount-positive ou amount-negative)
+   */
   getAmountClass(type: string): string {
     return ['deposit', 'bet_won', 'refund'].includes(type)
       ? 'amount-positive'

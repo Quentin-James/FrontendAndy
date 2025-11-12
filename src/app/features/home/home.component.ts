@@ -13,34 +13,27 @@ import { AuthService } from '../../core/services/auth.service';
 export class HomeComponent implements OnInit {
   constructor(public authService: AuthService, private router: Router) {}
 
+  /**
+   * Initialise le composant et redirige automatiquement les utilisateurs authentifiés
+   * - Admin → /admin/dashboard
+   * - User → /matches
+   * Ne redirige que si l'URL est exactement '/' ou '/home'
+   */
   ngOnInit(): void {
-    console.log('🏠 Home component initialized');
-    console.log('Current route:', this.router.url);
-
     const currentUrl = this.router.url;
 
     // NE rediriger QUE si on est exactement sur '/' ou '/home'
     // ET PAS sur une sous-route comme /admin/bets
     if (currentUrl === '/' || currentUrl === '/home') {
-      console.log('On homepage - checking authentication...');
-
       if (this.authService.isAuthenticated()) {
         const user = this.authService.currentUser();
-        console.log('User authenticated:', user);
 
         if (this.authService.isAdmin()) {
-          console.log('🔄 Redirecting admin to dashboard...');
           this.router.navigate(['/admin/dashboard']);
         } else {
-          console.log('🔄 Redirecting user to matches...');
           this.router.navigate(['/matches']);
         }
       }
-    } else {
-      console.log(
-        'Not on homepage, skipping redirect. Current URL:',
-        currentUrl
-      );
     }
   }
 }
