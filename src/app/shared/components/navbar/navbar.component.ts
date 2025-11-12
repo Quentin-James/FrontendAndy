@@ -28,14 +28,24 @@ export class NavbarComponent {
 
   constructor(private authService: AuthService) {}
 
+  /**
+   * Déconnecte l'utilisateur actuel et le redirige vers la page d'accueil
+   */
   logout(): void {
     this.authService.logout();
   }
 
+  /**
+   * Bascule l'état du menu mobile (ouvert/fermé)
+   */
   toggleMenu(): void {
     this.menuOpen = !this.menuOpen;
   }
 
+  /**
+   * Ferme le menu mobile
+   * Utilisé après un clic sur un lien de navigation
+   */
   closeMenu(): void {
     this.menuOpen = false;
   }
