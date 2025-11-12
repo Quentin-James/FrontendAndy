@@ -31,21 +31,19 @@ export class LoginComponent {
     });
   }
 
+  /**
+   * Soumet le formulaire de connexion
+   * Authentifie l'utilisateur et le redirige selon son rôle (admin → dashboard, user → matches)
+   */
   onSubmit(): void {
     if (this.loginForm.valid) {
       this.loading = true;
       const { email, password } = this.loginForm.value;
 
-      console.log('🔐 Attempting login...');
-
       this.authService.login(email, password).subscribe({
         next: (response) => {
-          console.log('✅ Login successful:', response);
-          console.log('User role:', response.user?.role);
-
           // Vérifier que l'utilisateur existe
           if (!response.user) {
-            console.error('❌ User missing in response!');
             alert('Erreur: données utilisateur manquantes');
             this.loading = false;
             return;
@@ -53,22 +51,16 @@ export class LoginComponent {
 
           // Rediriger directement selon le rôle
           if (response.user.role === 'admin') {
-            console.log('🔄 Admin login - redirecting to dashboard');
             this.router.navigate(['/admin/dashboard']).then(() => {
-              console.log('✅ Navigation complete');
               this.loading = false;
             });
           } else {
-            console.log('🔄 User login - redirecting to matches');
             this.router.navigate(['/matches']).then(() => {
-              console.log('✅ Navigation complete');
               this.loading = false;
             });
           }
         },
         error: (error) => {
-          console.error('❌ Login error:', error);
-
           let errorMessage = 'Erreur de connexion';
 
           if (error.status === 401) {

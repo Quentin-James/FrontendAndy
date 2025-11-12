@@ -32,6 +32,10 @@ export class RegisterComponent {
     });
   }
 
+  /**
+   * Soumet le formulaire d'inscription
+   * Crée un nouveau compte utilisateur et redirige vers la page de connexion
+   */
   onSubmit(): void {
     if (this.registerForm.valid) {
       this.loading = true;
