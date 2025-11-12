@@ -52,12 +52,14 @@ export class PlaceBetComponent implements OnInit {
     }
   }
 
+  /**
+   * Charge les détails d'un match depuis l'API
+   * Applique des cotes par défaut si le backend ne les fournit pas
+   * @param id - ID du match à charger
+   */
   loadMatch(id: number): void {
-    console.log('📡 Loading match:', id);
     this.matchService.getMatchById(id).subscribe({
       next: (match) => {
-        console.log('✅ Match loaded:', match);
-
         // Si le backend ne retourne pas les cotes, utiliser les valeurs par défaut
         const matchWithOdds = {
           ...match,
@@ -65,26 +67,28 @@ export class PlaceBetComponent implements OnInit {
           odds_team2: match.odds_team2 || this.defaultOdds.team2,
         };
 
-        console.log('📊 Odds:', {
-          team1: matchWithOdds.odds_team1,
-          team2: matchWithOdds.odds_team2,
-        });
-
         this.match.set(matchWithOdds);
       },
       error: (error) => {
-        console.error('❌ Error loading match:', error);
         alert('Impossible de charger le match');
         this.router.navigate(['/matches']);
       },
     });
   }
 
+  /**
+   * Retourne le montant maximum qu'un utilisateur peut parier (son solde actuel)
+   * @returns Solde disponible de l'utilisateur
+   */
   get maxBet(): number {
     const user = this.currentUser();
     return user ? parseFloat(user.balance) : 0;
   }
 
+  /**
+   * Récupère la cote de l'équipe sélectionnée dans le formulaire
+   * @returns Cote de l'équipe sélectionnée
+   */
   getSelectedOdds(): number {
     const selectedTeamId = this.betForm.get('team_id')?.value; // ← Changer ici aussi
     const currentMatch = this.match();
@@ -95,6 +99,10 @@ export class PlaceBetComponent implements OnInit {
       : currentMatch.odds_team2 ?? this.defaultOdds.team2;
   }
 
+  /**
+   * Calcule le gain potentiel du pari (montant × cote)
+   * @returns Gain potentiel formaté avec 2 décimales
+   */
   calculatePotentialWin(): string {
     const amount = this.betForm.get('amount')?.value;
     const odds = this.getSelectedOdds();
@@ -104,6 +112,10 @@ export class PlaceBetComponent implements OnInit {
     return win.toFixed(2);
   }
 
+  /**
+   * Soumet le formulaire de pari
+   * Vérifie le solde, crée le pari et redirige vers la page des paris
+   */
   onSubmit(): void {
     if (this.betForm.valid && this.match()) {
       this.loading = true;
@@ -131,28 +143,13 @@ export class PlaceBetComponent implements OnInit {
       const odds = this.getSelectedOdds();
       const data = {
         match_id: this.match()!.id,
-        team_id: this.betForm.value.team_id, // ← Changer de selected_team_id à team_id
+        team_id: this.betForm.value.team_id,
         amount: amount,
         odds: odds,
       };
 
-      console.log('🎯 Placing bet:', data);
-      console.log('📊 Bet details:', {
-        match: this.match()!.team1?.name + ' vs ' + this.match()!.team2?.name,
-        selectedTeam:
-          this.betForm.value.team_id === this.match()!.team1_id
-            ? this.match()!.team1?.name
-            : this.match()!.team2?.name,
-        amount: amount,
-        odds: odds,
-        potentialWin: this.calculatePotentialWin(),
-      });
-
       this.betService.createBet(data).subscribe({
         next: (bet) => {
-          console.log('✅ Bet placed successfully:', bet);
-          console.log('🆔 Bet ID:', bet.id);
-
           alert(
             `✅ Pari placé avec succès !\n\n` +
               `Mise: ${amount.toFixed(2)}€\n` +
@@ -160,14 +157,9 @@ export class PlaceBetComponent implements OnInit {
               `Gain potentiel: ${this.calculatePotentialWin()}€`
           );
 
-          console.log('🔄 Redirecting to /bets/my-bets');
           this.router.navigate(['/bets/my-bets']);
         },
         error: (error) => {
-          console.error('❌ Error placing bet:', error);
-          console.error('❌ Error status:', error.status);
-          console.error('❌ Error details:', error.error);
-
           let errorMsg = 'Impossible de placer le pari';
 
           if (error.status === 400) {
@@ -185,13 +177,15 @@ export class PlaceBetComponent implements OnInit {
           this.loading = false;
         },
         complete: () => {
-          console.log('✅ Bet placement completed');
           this.loading = false;
         },
       });
     }
   }
 
+  /**
+   * Retourne à la page de la liste des matchs
+   */
   goBack(): void {
     this.router.navigate(['/matches']);
   }

@@ -21,30 +21,37 @@ export class MyBetsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    console.log('🏠 MyBets component initialized');
     this.loadBets();
   }
 
+  /**
+   * Charge la liste des paris de l'utilisateur connecté depuis l'API
+   */
   loadBets(): void {
-    console.log('📡 Loading my bets...');
-
     this.betService.getMyBets().subscribe({
       next: (bets) => {
-        console.log('✅ Bets loaded:', bets);
-        console.log('📊 Total bets:', bets.length);
         this.bets.set(bets);
       },
       error: (error) => {
-        console.error('❌ Error loading bets:', error);
         alert('Erreur lors du chargement des paris');
       },
     });
   }
 
+  /**
+   * Compte le nombre de paris par statut
+   * @param status - Statut à compter (pending, won, lost, cancelled)
+   * @returns Nombre de paris avec ce statut
+   */
   countByStatus(status: string): number {
     return this.bets().filter((b) => b.status === status).length;
   }
 
+  /**
+   * Traduit le statut d'un pari en français
+   * @param status - Statut du pari en anglais
+   * @returns Label en français
+   */
   getStatusLabel(status: string): string {
     const labels: Record<string, string> = {
       pending: 'En attente',
