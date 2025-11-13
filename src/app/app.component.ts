@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './shared/components/navbar/navbar.component';
+import { MatchSchedulerService } from './core/services/match-scheduler.service';
 
 @Component({
   selector: 'app-root',
@@ -21,6 +22,13 @@ import { NavbarComponent } from './shared/components/navbar/navbar.component';
     `,
   ],
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'E-Sport Betting';
+
+  constructor(private matchScheduler: MatchSchedulerService) {}
+
+  ngOnInit(): void {
+    // Démarrer la mise à jour automatique des statuts de matchs
+    this.matchScheduler.startAutoUpdate();
+  }
 }

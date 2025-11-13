@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { Match, CreateMatchDto, UpdateMatchDto } from '../models/match.model';
 
@@ -13,11 +14,14 @@ export class MatchService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Récupère la liste de tous les matchs
+   * Récupère la liste de tous les matchs et met à jour automatiquement les statuts
+   * Les matchs dont la date est passée et le statut est "scheduled" passent en "finished"
    * @returns Observable contenant la liste complète des matchs
    */
   getAllMatches(): Observable<Match[]> {
-    return this.http.get<Match[]>(this.apiUrl);
+    return this.http
+      .get<Match[]>(this.apiUrl)
+      .pipe(map((matches) => this.updatePastMatchesStatus(matches)));
   }
 
   /**
@@ -67,5 +71,62 @@ export class MatchService {
    */
   deleteMatch(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  /**
+   * Met à jour automatiquement le statut des matchs passés
+   * @param matches - Liste des matchs à vérifier
+   * @returns Liste des matchs avec statuts mis à jour
+   * @private
+   */
+  private updatePastMatchesStatus(matches: Match[]): Match[] {
+    const now = new Date();
+
+    matches.forEach((match) => {
+      const matchDate = new Date(match.scheduled_at);
+
+      // Si le match est programmé mais la date est passée (+ 3h de marge)
+      if (match.status === 'scheduled' && matchDate < now) {
+        const hoursSinceMatch =
+          (now.getTime() - matchDate.getTime()) / (1000 * 60 * 60);
+
+        // Si le match date de plus de 3 heures, on le passe en finished
+        if (hoursSinceMatch > 3) {
+          this.updateMatchStatus(match.id, 'finished').subscribe({
+            next: () => {
+              match.status = 'finished';
+            },
+            error: () => {
+              // Gestion silencieuse de l'erreur
+            },
+          });
+        }
+        // Si le match date de moins de 3 heures, on le passe en live
+        else if (hoursSinceMatch > 0) {
+          this.updateMatchStatus(match.id, 'live').subscribe({
+            next: () => {
+              match.status = 'live';
+            },
+            error: () => {},
+          });
+        }
+      }
+    });
+
+    return matches;
+  }
+
+  /**
+   * Met à jour uniquement le statut d'un match
+   * @param id - ID du match
+   * @param status - Nouveau statut
+   * @returns Observable contenant le match mis à jour
+   * @private
+   */
+  private updateMatchStatus(
+    id: number,
+    status: 'scheduled' | 'live' | 'finished' | 'cancelled'
+  ): Observable<Match> {
+    return this.http.put<Match>(`${this.apiUrl}/${id}`, { status });
   }
 }
