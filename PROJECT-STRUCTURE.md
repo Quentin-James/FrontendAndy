@@ -176,22 +176,3 @@ AndyFrontend/
 ```
 
 ---
-
-## 🚀 Commandes de Démarrage
-
-```bash
-# Installation
-npm install
-
-# Développement
-ng serve
-
-# Build Production
-ng build --configuration production
-
-# Tests
-ng test
-
-# Lint
-ng lint
-```
