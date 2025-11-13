@@ -180,7 +180,6 @@ AndyFrontend/
 │ ├── assets/ # Images, fonts, etc.
 │ ├── index.html
 │ └── styles.scss # Styles globaux
-├── API-ENDPOINTS.md # Documentation API complète
 ├── PROJECT-STRUCTURE.md # Architecture détaillée
 ├── angular.json
 ├── package.json
@@ -268,7 +267,6 @@ Chaque service a **une seule responsabilité**:
 | `/tournaments`   | GET     | Liste tournois          |
 | `/transactions`  | GET     | Historique transactions |
 
-📚 **Documentation complète**: [API-ENDPOINTS.md](./API-ENDPOINTS.md)
 
 ### Authentification
 
