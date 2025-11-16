@@ -9,6 +9,7 @@ import {
 import { MatchService } from '../../../core/services/match.service';
 import { TeamService } from '../../../core/services/team.service';
 import { TournamentService } from '../../../core/services/tournament.service';
+import { BetService } from '../../../core/services/bet.service';
 import { Match } from '../../../core/models/match.model';
 import { Team } from '../../../core/models/team.model';
 import { Tournament } from '../../../core/models/tournament.model';
@@ -33,7 +34,8 @@ export class AdminMatchesComponent implements OnInit {
     private fb: FormBuilder,
     private matchService: MatchService,
     private teamService: TeamService,
-    private tournamentService: TournamentService
+    private tournamentService: TournamentService,
+    private betService: BetService
   ) {
     this.matchForm = this.fb.group({
       tournament_id: ['', Validators.required],
@@ -83,29 +85,63 @@ export class AdminMatchesComponent implements OnInit {
    * Selon le mode (création/édition), appelle le service approprié
    */
   onSubmit(): void {
-    if (this.matchForm.valid) {
+    if (this.matchForm.valid && this.editMode && this.currentMatchId) {
       this.loading = true;
       const data = this.matchForm.value;
 
-      if (this.editMode && this.currentMatchId) {
-        this.matchService.updateMatch(this.currentMatchId, data).subscribe({
-          next: () => {
-            alert('Match modifié !');
-            this.loadMatches();
-            this.resetForm();
-          },
-          complete: () => (this.loading = false),
-        });
-      } else {
-        this.matchService.createMatch(data).subscribe({
-          next: () => {
-            alert('Match créé !');
-            this.loadMatches();
-            this.resetForm();
-          },
-          complete: () => (this.loading = false),
-        });
-      }
+      this.matchService.updateMatch(this.currentMatchId, data).subscribe({
+        next: (match) => {
+          // Si le match passe en finished et qu'il y a un winner_id, résoudre les paris
+          if (data.status === 'finished' && data.winner_id) {
+            this.betService.resolveBets(match.id, data.winner_id).subscribe({
+              next: (resolvedBets) => {
+                console.log(
+                  `✅ ${resolvedBets.length} paris résolus automatiquement`
+                );
+                alert(
+                  `✅ Match mis à jour avec succès!\n${resolvedBets.length} paris ont été résolus.`
+                );
+              },
+              error: (error) => {
+                console.error(
+                  '❌ Erreur lors de la résolution des paris:',
+                  error
+                );
+                alert(
+                  '⚠️ Match mis à jour mais erreur lors de la résolution des paris'
+                );
+              },
+            });
+          } else {
+            alert('✅ Match mis à jour avec succès');
+          }
+
+          this.loadMatches();
+          this.cancelEdit();
+          this.loading = false;
+        },
+        error: (error) => {
+          alert('❌ Erreur lors de la mise à jour du match');
+          this.loading = false;
+        },
+      });
+    } else if (this.matchForm.valid && !this.editMode) {
+      // Création d'un nouveau match
+      this.loading = true;
+      const data = this.matchForm.value;
+
+      this.matchService.createMatch(data).subscribe({
+        next: () => {
+          alert('✅ Match créé avec succès');
+          this.loadMatches();
+          this.matchForm.reset();
+          this.loading = false;
+        },
+        error: (error) => {
+          alert('❌ Erreur lors de la création du match');
+          this.loading = false;
+        },
+      });
     }
   }
 

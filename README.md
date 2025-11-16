@@ -48,12 +48,15 @@ Cette application est une **plateforme complète de paris e-sport** permettant a
 - ✅ **Gestion des tournois** (CRUD + Filtres)
 - ✅ **Gestion des utilisateurs** (Liste, modification, suppression)
 - ✅ **Supervision des paris** (Vue d'ensemble de tous les paris)
+- ✅ **Résolution manuelle des paris** (Marquer comme gagné/perdu/annulé)
 
 ### Fonctionnalités avancées
 
 - ✅ **Signals Angular** pour la réactivité
 - ✅ **Standalone Components** (pas de NgModules)
 - ✅ **Recherche et filtres** avancés
+- ✅ **Résolution automatique des paris** (matchs terminés)
+- ✅ **Paris en direct** (Live Betting)
 
 ---
 

@@ -81,28 +81,20 @@ export class MatchService {
    */
   private updatePastMatchesStatus(matches: Match[]): Match[] {
     const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     matches.forEach((match) => {
       const matchDate = new Date(match.scheduled_at);
+      const matchDay = new Date(
+        matchDate.getFullYear(),
+        matchDate.getMonth(),
+        matchDate.getDate()
+      );
 
-      // Si le match est programmé mais la date est passée (+ 3h de marge)
-      if (match.status === 'scheduled' && matchDate < now) {
-        const hoursSinceMatch =
-          (now.getTime() - matchDate.getTime()) / (1000 * 60 * 60);
-
-        // Si le match date de plus de 3 heures, on le passe en finished
-        if (hoursSinceMatch > 3) {
-          this.updateMatchStatus(match.id, 'finished').subscribe({
-            next: () => {
-              match.status = 'finished';
-            },
-            error: () => {
-              // Gestion silencieuse de l'erreur
-            },
-          });
-        }
-        // Si le match date de moins de 3 heures, on le passe en live
-        else if (hoursSinceMatch > 0) {
+      // Si le match est scheduled
+      if (match.status === 'scheduled') {
+        // Si la date du match est aujourd'hui → passer en live
+        if (matchDay.getTime() === today.getTime()) {
           this.updateMatchStatus(match.id, 'live').subscribe({
             next: () => {
               match.status = 'live';
@@ -110,6 +102,25 @@ export class MatchService {
             error: () => {},
           });
         }
+        // Si la date du match est passée → passer en finished
+        else if (matchDay < today) {
+          this.updateMatchStatus(match.id, 'finished').subscribe({
+            next: () => {
+              match.status = 'finished';
+            },
+            error: () => {},
+          });
+        }
+      }
+
+      // Si le match est live et que la date est passée → passer en finished
+      if (match.status === 'live' && matchDay < today) {
+        this.updateMatchStatus(match.id, 'finished').subscribe({
+          next: () => {
+            match.status = 'finished';
+          },
+          error: () => {},
+        });
       }
     });
 

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, forkJoin } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   Bet,
@@ -8,7 +8,7 @@ import {
   BetCalculation,
   AccumulatorBet,
 } from '../models/bet.model';
-import { catchError } from 'rxjs/operators';
+import { catchError, switchMap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root',
@@ -172,6 +172,38 @@ export class BetService {
     return this.http.get<Bet[]>(this.apiUrl).pipe(
       catchError((error) => {
         throw error;
+      })
+    );
+  }
+
+  /**
+   * Résout automatiquement les paris d'un match terminé
+   * Met à jour le statut des paris en 'won' ou 'lost' selon le vainqueur
+   * @param matchId - ID du match terminé
+   * @param winnerId - ID de l'équipe gagnante
+   * @returns Observable contenant les paris mis à jour
+   */
+  resolveBets(matchId: number, winnerId: number): Observable<Bet[]> {
+    return this.http.get<Bet[]>(`${this.apiUrl}/match/${matchId}`).pipe(
+      switchMap((bets) => {
+        const updateObservables = bets
+          .filter((bet) => bet.status === 'pending')
+          .map((bet) => {
+            const newStatus = bet.team_id === winnerId ? 'won' : 'lost';
+            return this.http.patch<Bet>(`${this.apiUrl}/${bet.id}`, {
+              status: newStatus,
+            });
+          });
+
+        if (updateObservables.length === 0) {
+          return of([]);
+        }
+
+        return forkJoin(updateObservables);
+      }),
+      catchError((error) => {
+        console.error('Erreur lors de la résolution des paris:', error);
+        return of([]);
       })
     );
   }
